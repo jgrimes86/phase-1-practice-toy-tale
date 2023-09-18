@@ -26,6 +26,7 @@ function toyPopulator(toyObject) {
   toyObject.forEach((element) => {
     const card = document.createElement('div');
     card.setAttribute('class', 'card');
+    card.setAttribute('data-id', element.id);
 
     const toyName = document.createElement('h2');
     const toyImage = document.createElement('img');
@@ -39,6 +40,13 @@ function toyPopulator(toyObject) {
     toyImage.src = element.image;
     toyLikes.textContent = element.likes;
     button.textContent = 'like';
+
+    button.addEventListener('click', (event) => {
+      let numberOfLikes = toyLikes.textContent++
+      let toyDIV = event.target.parentElement;
+      let toyId = toyDIV.getAttribute('data-id');
+      likePatchRequest(numberOfLikes, toyId)
+    })
 
     toyCollection.append(card);
   });
@@ -54,7 +62,7 @@ function newToy(submitEvent) {
   submitEvent.preventDefault();
   const card = document.createElement('div');
   card.setAttribute('class', 'card');
-
+  
   const toyName = document.createElement('h2');
   const toyImage = document.createElement('img');
   toyImage.setAttribute('class', 'toy-avatar');
@@ -66,10 +74,53 @@ function newToy(submitEvent) {
 
   toyLikes.innerText = 0 
   button.textContent = 'like';
-
-
+  
+  button.addEventListener('click', (event) => {
+    let numberOfLikes = toyLikes.textContent++
+    let toyDIV = event.target.parentElement;
+    let toyId = toyDIV.getAttribute('data-id');
+    likePatchRequest(numberOfLikes, toyId)
+  })
 
   card.append(toyName, toyImage, toyLikes, button);
   toyCollection.append(card);
+  
+  const databaseUpdate = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    body: JSON.stringify({
+      name: toyName.innerText,
+      image: toyImage.innerText,
+      likes: toyLikes.textContent,
+    })
+  }
+
+  fetch(toyDatabase, databaseUpdate)
+  .then((response) => response.json())
+  .then((response) => {
+    card.setAttribute('data-id', response.id)
+  })
+    
   form.reset();
 }
+
+function likePatchRequest(numberOfLikes, toyId) {
+
+  const patchObject = {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    body: JSON.stringify({
+      likes: numberOfLikes})
+  }
+
+  fetch('http://localhost:3000/toys/'+toyId, patchObject)
+ 
+  
+}
+
