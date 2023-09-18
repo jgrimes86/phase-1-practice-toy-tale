@@ -20,8 +20,9 @@ fetch(toyDatabase)
 .then((response) => response.json())
 .then(toyPopulator)
 
+const toyCollection = document.getElementById('toy-collection');
+
 function toyPopulator(toyObject) {
-  const toyCollection = document.getElementById('toy-collection');
   toyObject.forEach((element) => {
     const card = document.createElement('div');
     card.setAttribute('class', 'card');
@@ -41,4 +42,34 @@ function toyPopulator(toyObject) {
 
     toyCollection.append(card);
   });
+}
+
+
+
+const form = document.querySelector('form');
+
+form.addEventListener('submit', newToy);
+
+function newToy(submitEvent) {
+  submitEvent.preventDefault();
+  const card = document.createElement('div');
+  card.setAttribute('class', 'card');
+
+  const toyName = document.createElement('h2');
+  const toyImage = document.createElement('img');
+  toyImage.setAttribute('class', 'toy-avatar');
+  const toyLikes = document.createElement('p');
+  const button = document.createElement('button');
+
+  toyName.textContent = submitEvent.target.name.value
+  toyImage.textContent = submitEvent.target.image.value
+
+  toyLikes.innerText = 0 
+  button.textContent = 'like';
+
+
+
+  card.append(toyName, toyImage, toyLikes, button);
+  toyCollection.append(card);
+  form.reset();
 }
