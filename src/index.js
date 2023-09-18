@@ -17,42 +17,44 @@ document.addEventListener("DOMContentLoaded", () => {
 const toyDatabase = 'http://localhost:3000/toys';
 
 fetch(toyDatabase)
-.then((response) => response.json())
+.then(response => response.json())
 .then(toyPopulator)
 
 const toyCollection = document.getElementById('toy-collection');
 
-function toyPopulator(toyObject) {
-  toyObject.forEach((element) => {
+function toyPopulator(toyArray) {
+  toyArray.forEach((toyObject) => {
+    
     const card = document.createElement('div');
     card.setAttribute('class', 'card');
-    card.setAttribute('data-id', element.id);
-
+    card.setAttribute('data-id', toyObject.id);
     const toyName = document.createElement('h2');
     const toyImage = document.createElement('img');
     toyImage.setAttribute('class', 'toy-avatar');
     const toyLikes = document.createElement('p');
     const button = document.createElement('button');
-
+    button.setAttribute('id', toyObject.id);
     card.append(toyName, toyImage, toyLikes, button);
 
-    toyName.textContent = element.name;
-    toyImage.src = element.image;
-    toyLikes.textContent = element.likes;
+    toyName.textContent = toyObject.name;
+    toyImage.src = toyObject.image;
+    toyLikes.textContent = toyObject.likes+' likes';
     button.textContent = 'like';
 
     button.addEventListener('click', (event) => {
-      let numberOfLikes = toyLikes.textContent++
-      let toyDIV = event.target.parentElement;
-      let toyId = toyDIV.getAttribute('data-id');
-      likePatchRequest(numberOfLikes, toyId)
+      let numberOfLikesString = toyLikes.textContent;
+      let numberOfLikesArray = numberOfLikesString.split(' ');
+      ++numberOfLikesArray[0]
+      numberOfLikes = numberOfLikesArray[0]
+      toyLikes.textContent = numberOfLikes+" Likes"
+  
+      let toyId = event.target.getAttribute('id');
+      likePatchRequest(numberOfLikes, toyId);
     })
 
     toyCollection.append(card);
   });
 }
-
-
 
 const form = document.querySelector('form');
 
@@ -60,30 +62,9 @@ form.addEventListener('submit', newToy);
 
 function newToy(submitEvent) {
   submitEvent.preventDefault();
-  const card = document.createElement('div');
-  card.setAttribute('class', 'card');
-  
-  const toyName = document.createElement('h2');
-  const toyImage = document.createElement('img');
-  toyImage.setAttribute('class', 'toy-avatar');
-  const toyLikes = document.createElement('p');
-  const button = document.createElement('button');
-
-  toyName.textContent = submitEvent.target.name.value
-  toyImage.textContent = submitEvent.target.image.value
-
-  toyLikes.innerText = 0 
-  button.textContent = 'like';
-  
-  button.addEventListener('click', (event) => {
-    let numberOfLikes = toyLikes.textContent++
-    let toyDIV = event.target.parentElement;
-    let toyId = toyDIV.getAttribute('data-id');
-    likePatchRequest(numberOfLikes, toyId)
-  })
-
-  card.append(toyName, toyImage, toyLikes, button);
-  toyCollection.append(card);
+    
+  let toyName = submitEvent.target.name.value
+  let toyImage = submitEvent.target.image.value
   
   const databaseUpdate = {
     method: "POST",
@@ -92,20 +73,22 @@ function newToy(submitEvent) {
       "Accept": "application/json",
     },
     body: JSON.stringify({
-      name: toyName.innerText,
-      image: toyImage.innerText,
-      likes: toyLikes.textContent,
+      name: toyName,
+      image: toyImage,
+      likes: 0,
     })
   }
-
+  
   fetch(toyDatabase, databaseUpdate)
-  .then((response) => response.json())
-  .then((response) => {
-    card.setAttribute('data-id', response.id)
-  })
-    
+    .then(response => response.json())
+    .then(response => {
+      newToyArray = [response];
+      toyPopulator(newToyArray)
+    })
+  
   form.reset();
 }
+
 
 function likePatchRequest(numberOfLikes, toyId) {
 
@@ -116,7 +99,7 @@ function likePatchRequest(numberOfLikes, toyId) {
       "Accept": "application/json",
     },
     body: JSON.stringify({
-      likes: numberOfLikes})
+      likes: `${numberOfLikes}`})
   }
 
   fetch('http://localhost:3000/toys/'+toyId, patchObject)
